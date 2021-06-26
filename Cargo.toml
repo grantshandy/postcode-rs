@@ -2,6 +2,11 @@
 name = "postcode"
 version = "0.1.0"
 edition = "2018"
+license = "GPL-3.0"
+authors = ["Grant Handy <grantshandy@gmail.com"]
+repository = "https://github.com/grantshandy/postcode-rs"
+documentation = "https://docs.rs/postcode"
+keywords = ["uk", "united", "kingdom", "code", "post"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
