@@ -1,7 +1,13 @@
 # postcode-rs
-Postcode & Geolocation API for the UK.
+[![crates.io](https://img.shields.io/crates/d/postcode)](https://crates.io/crates/postcode)
+[![crates.io](https://img.shields.io/crates/v/postcode)](https://crates.io/crates/postcode)
+[![API](https://docs.rs/postcode/badge.svg)](https://docs.rs/postcode)
 
-This is an API client for [postcodes.io](https://postcodes.io/).
+Postcode & Geolocation API for the UK. This is an API client for [postcodes.io](https://postcodes.io/).
+
+```
+postcode = "0.1.1"
+```
 
 # Example
 ```rust
@@ -15,6 +21,9 @@ async fn main() {
 
     println!("{} ({}, {}) -> ({}, {})", code, post.region, post.country, post.latitude, post.longitude);
 }
+```
+```
+SW1W0NY (London, England) -> (51.495373, -0.147421)
 ```
 
 # License

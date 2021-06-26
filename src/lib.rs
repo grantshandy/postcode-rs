@@ -1,5 +1,35 @@
-use serde_json::{Value, json};
+//! # postcode-rs
+//! [![crates.io](https://img.shields.io/crates/d/postcode)](https://crates.io/crates/postcode)
+//! [![crates.io](https://img.shields.io/crates/v/postcode)](https://crates.io/crates/postcode)
+//! [![API](https://docs.rs/postcode/badge.svg)](https://docs.rs/postcode)
+//!
+//! Postcode & Geolocation API for the UK. This is an API client for [postcodes.io](https://postcodes.io/).
+//!
+//! ```
+//! postcode = "0.1.1"
+//! ```
+//!
+//! # Example
+//! ```rust
+//! use postcode::Postcode;
+//!
+//! #[async_std::main]
+//! async fn main() {
+//!     let code = "SW1W0NY";
+//!  
+//!     let post = Postcode::from_code(code).await.unwrap();
+//!
+//!     println!("{} ({}, {}) -> ({}, {})", code, post.region, post.country, post.latitude, post.longitude);
+//! }
+//! ```
+//! ```
+//! SW1W0NY (London, England) -> (51.495373, -0.147421)
+//! ```
 
+use serde_json::{Value, json};
+use thiserror::Error;
+
+/// The main struct that defines a postcode.
 #[derive(Clone, PartialEq, Debug)]
 pub struct Postcode {
     pub postcode: String,
@@ -28,6 +58,7 @@ pub struct Postcode {
     pub codes: Codes,
 }
 
+/// More obscure codes that describe a postcode.
 #[derive(Clone, Hash, PartialEq, Eq, Debug)]
 pub struct Codes {
     pub admin_district: String,
@@ -45,6 +76,7 @@ pub struct Codes {
 }
 
 impl Postcode {
+    /// Get postcode information from the name.
     pub async fn from_code<T: AsRef<str>>(code: T) -> Result<Self, Error> {
         let res = match surf::get(format!("https://api.postcodes.io/postcodes/{}", code.as_ref())).recv_string().await {
             Ok(data) => data,
@@ -64,6 +96,7 @@ impl Postcode {
         return Self::json(&v["result"]);
     }
 
+    /// Lookup multiple [Postcode] in a single HTTP request.
     pub async fn from_multi_lookup(codes: Vec<&str>) -> Result<Vec<Self>, Error> {
         let v = json!({ "postcodes": codes });
 
@@ -101,6 +134,7 @@ impl Postcode {
         return Ok(array);
     }
 
+    /// Get the closest [Postcode] to a given coordinates.
     pub async fn from_coordinates(latitude: f64, longitude: f64) -> Result<Self, Error> {
         let res = match surf::get(format!("http://api.postcodes.io/postcodes?lon={}&lat={}", longitude, latitude)).recv_string().await {
             Ok(data) => data,
@@ -120,6 +154,7 @@ impl Postcode {
         return Self::json(&v["result"][0]);
     }
 
+    /// Get a random [Postcode].
     pub async fn random() -> Result<Self, Error> {
         let res = match surf::get("https://api.postcodes.io/random/postcodes").recv_string().await {
             Ok(data) => data,
@@ -224,6 +259,7 @@ impl Postcode {
     }
 }
 
+/// Validate a UK postcode.
 pub async fn validate<T: AsRef<str>>(code: T) -> Result<bool, Error> {
     let res = match surf::get(format!("https://api.postcodes.io/postcodes/{}/validate", code.as_ref())).recv_string().await {
         Ok(data) => data,
@@ -243,21 +279,13 @@ pub async fn validate<T: AsRef<str>>(code: T) -> Result<bool, Error> {
     return Ok(result);
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+/// A basic error struct for [Postcode].
+#[derive(Error, Debug, Clone, PartialEq, Hash)]
 pub enum Error {
+    #[error("Http Error: {0}")]
     Http(String),
+    #[error("Http Error: {0}")]
     Json(String),
+    #[error("Other Error: {0}")]
     Other(String),
-}
-
-impl std::error::Error for Error {}
-
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match self {
-            Error::Http(error) => write!(f, "Http Error: {}", error),
-            Error::Json(error) => write!(f, "Json Error: {}", error),
-            Error::Other(error) => write!(f, "Other Error: {}", error),
-        }
-    }
 }
